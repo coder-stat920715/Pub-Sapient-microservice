@@ -1,0 +1,13 @@
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+terraform/
+*.md
+.dockerignore
+Dockerfile
+.mvn/
+mvnw
+mvnw.cmd

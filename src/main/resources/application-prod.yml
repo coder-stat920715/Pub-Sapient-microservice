@@ -1,0 +1,13 @@
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: WARN
+    com.publicissapient.microservice: INFO
+  pattern:
+    # JSON-ish flat pattern is easier to parse in CloudWatch Logs Insights
+    # than multi-line stack-trace-heavy default patterns.
+    console: '{"timestamp":"%d{yyyy-MM-dd''T''HH:mm:ss.SSSXXX}","level":"%level","logger":"%logger{36}","thread":"%thread","message":"%msg"}%n'

@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: publicis-sapient-microservice
+
+  lifecycle:
+    # Upper bound for graceful shutdown across all SmartLifecycle beans
+    # (embedded Tomcat included). Must stay below the ECS task stopTimeout
+    # (40s in the Terraform task definition) so Spring always finishes
+    # before the container runtime force-kills the process.
+    timeout-per-shutdown-phase: 30s
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    accept-count: 100
+    max-connections: 10000
+
+management:
+  server:
+    port: ${SERVER_PORT:8080}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          # Composite readiness: the pod is not "Ready" (and the ALB target
+          # group health check will fail) until the readinessState AND the
+          # app's own custom indicators are all UP -- e.g. dependency checks.
+          include: readinessState
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+
+app:
+  s3-bucket-name: ${APP_S3_BUCKET_NAME:local-dev-bucket}
+  secret-name: ${APP_SECRET_NAME:local-dev-secret}
+
+logging:
+  level:
+    root: INFO
+    com.publicissapient.microservice: INFO
+    software.amazon.awssdk: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

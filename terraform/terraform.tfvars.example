@@ -1,0 +1,22 @@
+project_name = "publicis-sapient-svc"
+environment  = "prod"
+aws_region   = "us-east-1"
+
+vpc_cidr           = "10.0.0.0/16"
+az_count           = 2
+single_nat_gateway = false # true for dev/cost savings
+
+container_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/publicis-sapient-svc:latest"
+container_port  = 8080
+task_cpu        = 512
+task_memory     = 1024
+desired_count   = 2
+
+s3_bucket_name              = "publicis-sapient-svc-prod-data"
+secrets_manager_secret_name = "prod/publicis-sapient-svc/app-secrets"
+
+tags = {
+  ManagedBy = "Terraform"
+  Team      = "Platform-Engineering"
+  CostCenter = "ENG-1042"
+}

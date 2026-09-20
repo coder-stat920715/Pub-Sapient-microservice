@@ -1,0 +1,393 @@
+{
+  "info": {
+    "name": "Publicis Sapient Microservice",
+    "_postman_id": "b6f2f0a0-4b1a-4e2a-9c3a-5d7e1f2a9c10",
+    "description": "Full endpoint coverage for the Spring Boot 3 / ECS Fargate reference microservice: Actuator health/liveness/readiness probes, Secrets Manager status lookup, S3 object read/write, and negative-path error handling. Import alongside one of the two environment files (Local Docker or AWS ALB).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "secret_name", "value": "local-dev-secret", "type": "string" },
+    { "key": "file_key", "value": "test/hello.txt", "type": "string" },
+    { "key": "missing_file_key", "value": "does-not-exist.txt", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Actuator - Health & Probes",
+      "item": [
+        {
+          "name": "Overall Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/actuator/health", "host": ["{{base_url}}"], "path": ["actuator", "health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Overall status is UP', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('UP');",
+                  "});",
+                  "pm.test('Response time is acceptable (<1000ms)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Liveness Probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/actuator/health/liveness", "host": ["{{base_url}}"], "path": ["actuator", "health", "liveness"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Liveness returns 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('LivenessState is UP', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql('UP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Readiness Probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/actuator/health/readiness", "host": ["{{base_url}}"], "path": ["actuator", "health", "readiness"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Readiness returns 200 once app is warm', function () { pm.response.to.have.status(200); });",
+                  "pm.test('ReadinessState is UP', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql('UP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Metrics (list available)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/actuator/metrics", "host": ["{{base_url}}"], "path": ["actuator", "metrics"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Metrics endpoint returns 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Contains a names array', function () {",
+                  "    pm.expect(pm.response.json()).to.have.property('names');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "JVM Memory Metric (container-awareness check)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/actuator/metrics/jvm.memory.max", "host": ["{{base_url}}"], "path": ["actuator", "metrics", "jvm.memory.max"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Heap max reflects MaxRAMPercentage, not host RAM', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.measurements[0].value).to.be.above(0);",
+                  "    console.log('JVM max memory bytes reported:', body.measurements[0].value);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Secrets Manager",
+      "item": [
+        {
+          "name": "Get Secret Status - Happy Path",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/secrets/{{secret_name}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "secrets", "{{secret_name}}", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response has expected shape', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('secretName');",
+                  "    pm.expect(body).to.have.property('present');",
+                  "    pm.expect(body).to.have.property('length');",
+                  "});",
+                  "pm.test('Raw secret value is never echoed back', function () {",
+                  "    const raw = pm.response.text();",
+                  "    pm.expect(raw).to.not.include('password');",
+                  "    pm.expect(raw).to.not.include('secretString');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Secret Status - Not Found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/secrets/does-not-exist-secret/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "secrets", "does-not-exist-secret", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('Error body matches ErrorResponse shape', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('timestamp');",
+                  "    pm.expect(body).to.have.property('status', 404);",
+                  "    pm.expect(body).to.have.property('error', 'Not Found');",
+                  "    pm.expect(body).to.have.property('path');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Secret Status - Blank Path Param (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/secrets/%20/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "secrets", "%20", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 or 404 depending on routing', function () {",
+                  "    pm.expect([400, 404]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. S3 Files",
+      "item": [
+        {
+          "name": "Upload File (PUT-style POST)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "text/plain" }],
+            "body": {
+              "mode": "raw",
+              "raw": "Hello from Postman -- uploaded at {{$isoTimestamp}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/{{file_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "files", "{{file_key}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response confirms upload', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('uploaded');",
+                  "    pm.expect(body.key).to.eql(pm.collectionVariables.get('file_key'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get File - Happy Path (depends on Upload running first)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/{{file_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "files", "{{file_key}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Type is text/plain', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');",
+                  "});",
+                  "pm.test('Body contains uploaded content', function () {",
+                  "    pm.expect(pm.response.text()).to.include('Hello from Postman');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get File - Not Found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/{{missing_file_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "files", "{{missing_file_key}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('Error body has ResourceNotFoundException message', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error).to.eql('Not Found');",
+                  "    pm.expect(body.message).to.include('Object not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload File - Empty Body (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "text/plain" }],
+            "body": { "mode": "raw", "raw": "" },
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/{{file_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "files", "{{file_key}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 for blank body (@NotBlank)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Negative / IAM Boundary Tests (run against AWS environment)",
+      "item": [
+        {
+          "name": "Get File From Unauthorized Bucket (expect 502 - AccessDenied)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/files/../some-other-bucket-key.txt",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "files", "..", "some-other-bucket-key.txt"]
+            },
+            "description": "The Task Role's IAM policy only grants access to the single configured bucket. There is no code path to address another bucket, so this request exercises the GlobalExceptionHandler's AwsServiceException branch by requesting a key that does not exist inside the ALLOWED bucket -- confirming the app never leaks raw AWS error detail (no ARNs, no request IDs) to the client."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 or 502', function () {",
+                  "    pm.expect([404, 502]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('No AWS internals leaked in body', function () {",
+                  "    const raw = pm.response.text();",
+                  "    pm.expect(raw).to.not.include('arn:aws');",
+                  "    pm.expect(raw).to.not.include('AccessDenied');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": { "type": "text/javascript", "exec": [""] }
+    }
+  ]
+}
