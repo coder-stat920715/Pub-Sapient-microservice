@@ -1,4 +1,4 @@
-package com.publicissapient.microservice.config;
+package com.souptik.microservice.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

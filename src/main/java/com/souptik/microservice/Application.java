@@ -1,4 +1,4 @@
-package com.publicissapient.microservice;
+package com.souptik.microservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

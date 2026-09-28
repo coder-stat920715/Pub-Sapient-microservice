@@ -24,7 +24,7 @@ Configure AWS credentials for a profile that can assume/deploy (`aws configure` 
 ## 1. Unit & Build Testing (application layer)
 
 ```bash
-cd publicis-sapient-microservice
+cd Spring-microservice
 
 # Compile + run tests
 mvn clean verify
@@ -81,7 +81,7 @@ curl -i http://localhost:8080/api/v1/secrets/anything/status
 ## 3. Docker Container Testing
 
 ```bash
-docker build -t publicis-sapient-svc:local .
+docker build -t Spring-svc:local .
 
 docker run -d --name pss-test -p 8080:8080 \
   -e AWS_REGION=us-east-1 \
@@ -90,7 +90,7 @@ docker run -d --name pss-test -p 8080:8080 \
   -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
   -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
   -e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN \
-  publicis-sapient-svc:local
+  Spring-svc:local
 ```
 
 ### 3.1 Verify non-root user (security hardening)
@@ -146,7 +146,7 @@ docker rm -f pss-test
 ## 4. Postman Collection Testing
 
 Files are in `postman/`:
-- `Publicis-Sapient-Microservice.postman_collection.json`
+- `Spring-Microservice.postman_collection.json`
 - `Local-Docker.postman_environment.json`
 - `AWS-ALB.postman_environment.json`
 
@@ -163,7 +163,7 @@ Files are in `postman/`:
 ```bash
 npm install -g newman
 
-newman run postman/Publicis-Sapient-Microservice.postman_collection.json \
+newman run postman/Spring-Microservice.postman_collection.json \
   -e postman/Local-Docker.postman_environment.json \
   --reporters cli,json \
   --reporter-json-export postman/results-local.json
@@ -209,8 +209,8 @@ Record `alb_dns_name` — you'll need it for Sections 4 (AWS ALB Postman environ
 aws ecr get-login-password --region us-east-1 | \
   docker login --username AWS --password-stdin <account_id>.dkr.ecr.us-east-1.amazonaws.com
 
-docker tag publicis-sapient-svc:local <account_id>.dkr.ecr.us-east-1.amazonaws.com/publicis-sapient-svc-prod:latest
-docker push <account_id>.dkr.ecr.us-east-1.amazonaws.com/publicis-sapient-svc-prod:latest
+docker tag Spring-svc:local <account_id>.dkr.ecr.us-east-1.amazonaws.com/Spring-svc-prod:latest
+docker push <account_id>.dkr.ecr.us-east-1.amazonaws.com/Spring-svc-prod:latest
 
 aws ecs update-service \
   --cluster $(terraform output -raw ecs_cluster_name) \
@@ -238,7 +238,7 @@ ALB=$(terraform output -raw alb_dns_name)
 
 curl -i http://$ALB/actuator/health
 curl -i http://$ALB/actuator/health/readiness
-curl -i http://$ALB/api/v1/secrets/prod/publicis-sapient-svc/app-secrets/status
+curl -i http://$ALB/api/v1/secrets/prod/Spring-svc/app-secrets/status
 curl -i -X POST http://$ALB/api/v1/files/smoke-test/hello.txt -d "hello from smoke test"
 curl -i http://$ALB/api/v1/files/smoke-test/hello.txt
 ```
@@ -286,7 +286,7 @@ Hit `/api/v1/secrets/.../status` and `/api/v1/files/...` several times, then re-
 
 ```bash
 aws logs filter-log-events \
-  --log-group-name $(terraform output -raw log_group_name 2>/dev/null || echo /ecs/publicis-sapient-svc-prod) \
+  --log-group-name $(terraform output -raw log_group_name 2>/dev/null || echo /ecs/Spring-svc-prod) \
   --filter-pattern "Fetched secret"
 ```
 

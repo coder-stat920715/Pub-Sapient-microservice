@@ -1,4 +1,4 @@
-package com.publicissapient.microservice.config;
+package com.souptik.microservice.config;
 
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;

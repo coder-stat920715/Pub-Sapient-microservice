@@ -1,4 +1,4 @@
-package com.publicissapient.microservice.exception;
+package com.souptik.microservice.exception;
 
 import java.time.Instant;
 

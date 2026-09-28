@@ -1,6 +1,6 @@
-package com.publicissapient.microservice.controller;
+package com.souptik.microservice.controller;
 
-import com.publicissapient.microservice.service.SecretsManagerService;
+import com.souptik.microservice.service.SecretsManagerService;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

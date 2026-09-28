@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Project name, used as a prefix for all resource names"
   type        = string
-  default     = "publicis-sapient-svc"
+  default     = "Spring-svc"
 }
 
 variable "environment" {
@@ -63,7 +63,7 @@ variable "s3_bucket_name" {
 }
 
 variable "secrets_manager_secret_name" {
-  description = "Name of the Secrets Manager secret the app may read (e.g. prod/publicis-sapient-svc/db-credentials)"
+  description = "Name of the Secrets Manager secret the app may read (e.g. prod/Spring-svc/db-credentials)"
   type        = string
 }
 

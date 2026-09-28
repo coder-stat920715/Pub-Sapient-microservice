@@ -10,10 +10,10 @@ terraform {
 
   # Recommended for production: remote state with locking.
   # backend "s3" {
-  #   bucket         = "publicis-sapient-svc-tfstate"
+  #   bucket         = "Spring-svc-tfstate"
   #   key            = "prod/terraform.tfstate"
   #   region         = "us-east-1"
-  #   dynamodb_table = "publicis-sapient-svc-tf-locks"
+  #   dynamodb_table = "Spring-svc-tf-locks"
   #   encrypt        = true
   # }
 }

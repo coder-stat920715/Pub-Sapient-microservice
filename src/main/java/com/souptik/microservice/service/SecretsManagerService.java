@@ -1,9 +1,8 @@
-package com.publicissapient.microservice.service;
+package com.souptik.microservice.service;
 
-import com.publicissapient.microservice.exception.ResourceNotFoundException;
+import com.souptik.microservice.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
@@ -11,7 +10,6 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRespon
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Reads secrets from AWS Secrets Manager using the IAM Task Role, which is

@@ -1,6 +1,6 @@
-package com.publicissapient.microservice.controller;
+package com.souptik.microservice.controller;
 
-import com.publicissapient.microservice.service.S3StorageService;
+import com.souptik.microservice.service.S3StorageService;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

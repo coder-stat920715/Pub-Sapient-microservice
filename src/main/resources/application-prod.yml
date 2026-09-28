@@ -6,7 +6,7 @@ management:
 logging:
   level:
     root: WARN
-    com.publicissapient.microservice: INFO
+    com.souptik.microservice: INFO
   pattern:
     # JSON-ish flat pattern is easier to parse in CloudWatch Logs Insights
     # than multi-line stack-trace-heavy default patterns.

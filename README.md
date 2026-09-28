@@ -7,7 +7,7 @@ Terraform.
 ## Folder structure
 
 ```
-publicis-sapient-microservice/
+Spring-microservice/
 ├── terraform/
 │   ├── main.tf                       # root module wiring
 │   ├── variables.tf
@@ -18,7 +18,7 @@ publicis-sapient-microservice/
 │       ├── security-groups/          # ALB SG -> ECS Task SG chaining
 │       ├── iam/                      # Task Execution Role vs Task Role
 │       └── ecs/                      # ALB, target group, cluster, service
-├── src/main/java/com/publicissapient/microservice/
+├── src/main/java/com/souptik/microservice/
 │   ├── Application.java
 │   ├── config/
 │   │   ├── AwsConfig.java            # S3Client / SecretsManagerClient beans
@@ -46,12 +46,12 @@ publicis-sapient-microservice/
 ```bash
 # Build & test locally
 mvn clean package
-docker build -t publicis-sapient-svc:local .
+docker build -t Spring-svc:local .
 docker run -p 8080:8080 \
   -e AWS_REGION=us-east-1 \
   -e APP_S3_BUCKET_NAME=my-bucket \
   -e APP_SECRET_NAME=my-secret \
-  publicis-sapient-svc:local
+  Spring-svc:local
 
 # Provision infrastructure
 cd terraform

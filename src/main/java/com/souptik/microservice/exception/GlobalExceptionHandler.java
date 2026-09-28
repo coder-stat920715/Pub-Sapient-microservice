@@ -1,4 +1,4 @@
-package com.publicissapient.microservice.exception;
+package com.souptik.microservice.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;

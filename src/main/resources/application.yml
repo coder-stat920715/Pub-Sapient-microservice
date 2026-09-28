@@ -1,6 +1,6 @@
 spring:
   application:
-    name: publicis-sapient-microservice
+    name: Spring-microservice
 
   lifecycle:
     # Upper bound for graceful shutdown across all SmartLifecycle beans
@@ -58,7 +58,7 @@ app:
 logging:
   level:
     root: INFO
-    com.publicissapient.microservice: INFO
+    com.souptik.microservice: INFO
     software.amazon.awssdk: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
